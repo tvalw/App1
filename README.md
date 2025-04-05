@@ -1,7 +1,6 @@
 # Tarea 1 - Pizzería
 
 **Curso:** TICS200  
-**Proyecto:**  Análisis de métricas de ventas en una pizzería usando C.
 
 **Nombre del ejecutable:** `app1`
 
