@@ -4,6 +4,14 @@
 #include "metricas.h"
 #include "structs.h"
 
+#define MAX_ORDERS 1000
+// Leer el csv
+int leer_csv(const char *filename, Venta ventas[]) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: No se pudo abrir el archivo %s\n", filename);
+        return 0;
+    }
 
 // Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
