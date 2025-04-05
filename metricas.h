@@ -3,8 +3,19 @@
 
 #include "structs.h"
 
+
 // Función que lee el archivo CSV y llena el arreglo de ventas
 int leer_csv(const char *filename, Venta ventas[]);
+
+
+// Función que devuelve la fecha con menos ventas en dinero
+char* dls(int* size, Venta* ventas);
+
+// Función que devuelve la fecha con más pizzas vendidas
+char* dmsp(int *size, Venta *ventas);
+
+// Función que devuelve la fecha con menos pizzas vendidas
+char* dlsp(int *size, Venta *ventas);
 
 // Función que calcula el promedio de pizzas por orden
 char *apo(int *size, Venta *ventas);
