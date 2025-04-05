@@ -17,3 +17,5 @@ char *ims(int *size, Venta *ventas);
 
 // Función para Conteo de pizzas por categoría
 char* hp(int *size, Venta *ventas);
+
+#endif // METRICAS_H
