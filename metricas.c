@@ -71,6 +71,37 @@ if (*ptr == '"') {
     return count;
 }
 
+char *pms(int *size, Venta *ventas) {
+    int max_count = 0;
+    char* best_seller = NULL;
+    int sales[MAX_ORDERS] = {0};
+    static char resultado[150];  
+
+    for (int i = 0; i < *size; i++) {
+        int found = 0;
+        for (int j = 0; j < i; j++) {
+            // Compara correctamente los nombres de pizza
+            if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
+                sales[j] += ventas[i].quantity;
+                found = 1;
+                break;
+            }
+        }
+        if (!found) sales[i] = ventas[i].quantity;
+    }
+
+    for (int i = 0; i < *size; i++) {
+        if (sales[i] > max_count) {
+            max_count = sales[i];
+            best_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+        }
+    }
+
+    snprintf(resultado, sizeof(resultado), "Pizza más vendida: %s (%d unidades)", best_seller, max_count);
+    return resultado;
+}
+
+
 // Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
     float min_revenue = -1;
