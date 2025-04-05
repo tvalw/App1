@@ -16,6 +16,15 @@ typedef struct {
     char pizza_name[100];
 } Venta;
 
+// Definir tipo de función para métricas
+typedef char* (*MetricaFunction)(int*, Venta*);
+
+// Estructura para asociar el nombre de una métrica con su función correspondiente
+typedef struct {
+    const char* nombre;
+    MetricaFunction funcion;
+} Metrica;
+
 
 #endif
 

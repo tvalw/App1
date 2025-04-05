@@ -4,14 +4,6 @@
 #include "metricas.h"
 #include "structs.h"
 
-// Definir tipo de función para métricas
-typedef char* (*MetricaFunction)(int*, Venta*);
-
-// Estructura para asociar el nombre de una métrica con su función correspondiente
-typedef struct {
-    const char* nombre;
-    MetricaFunction funcion;
-} Metrica;
 
 // Menú de ayuda
 void mostrarMenu() {
