@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+// Estructura que representa una venta de pizza con sus detalles
 typedef struct {
     int pizza_id;
     int order_id;
