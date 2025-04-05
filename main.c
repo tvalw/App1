@@ -7,7 +7,7 @@
 // Definir tipo de función para métricas
 typedef char* (*MetricaFunction)(int*, Venta*);
 
-// Estructura que asocia nombre de métrica con su función
+// Estructura para asociar el nombre de una métrica con su función correspondiente
 typedef struct {
     const char* nombre;
     MetricaFunction funcion;
@@ -32,14 +32,14 @@ void mostrarMenu() {
     printf("  ./app1 ventas.csv pms apd hp\n\n");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {   // Si no se proporcionan suficientes argumentos, muestra el menú de ayuda y termina
     if (argc < 3) {
         mostrarMenu();
         return 1;
     }
 
-    Venta ventas[1000];
-    int size = leer_csv(argv[1], ventas);
+    Venta ventas[1000]; // Arreglo para almacenar hasta 1000 ventas
+    int size = leer_csv(argv[1], ventas); // Lee el archivo CSV pasado como argumento y llena el arreglo 'ventas'
 
     if (size == 0) {
         printf("Error: no se pudieron cargar los datos.\n");
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
         {"hp", hp},
     };
 
-    int num_metricas = sizeof(metricas) / sizeof(metricas[0]);
+    int num_metricas = sizeof(metricas) / sizeof(metricas[0]); // Calcula cuántas métricas hay en la lista
 
     // Ejecutar todas las métricas solicitadas
     for (int i = 2; i < argc; i++) {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        if (!encontrada) {
+        if (!encontrada) { // Si no se encontró la métrica, muestra un mensaje de error
             printf("Métrica '%s' no reconocida.\n", argv[i]);
         }
     }
