@@ -4,7 +4,7 @@
 #include "metricas.h"
 #include "structs.h"
 
-#define MAX_ORDERS 10000000
+#define MAX_ORDERS 10000
 
 int leer_csv(const char *filename, Venta ventas[]) {
     FILE *file = fopen(filename, "r");
