@@ -71,6 +71,7 @@ if (*ptr == '"') {
     return count;
 }
 
+//Pizza más vendida 
 char *pms(int *size, Venta *ventas) {
     int max_count = 0;
     char* best_seller = NULL;
@@ -130,6 +131,32 @@ char* dls(int* size, Venta* ventas) {
     sprintf(resultado, "Fecha con menos ventas (dinero): %s - $%.2f", peor_fecha, min_revenue);
     return resultado;
 }
+
+//Pizza menos vendida
+char *pls(int *size, Venta *ventas) {
+    int min_count = 999999;
+    char* worst_seller = NULL;
+    static char resultado[150]; 
+
+    for (int i = 0; i < *size; i++) {
+        int sum = 0;
+        for (int j = 0; j < *size; j++) {
+            // Compara correctamente los nombres de pizza
+            if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
+                sum += ventas[j].quantity;
+            }
+        }
+        if (sum < min_count) {
+            min_count = sum;
+            worst_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+        }
+    }
+
+    snprintf(resultado, sizeof(resultado), "Pizza menos vendida: %s (%d unidades)", worst_seller, min_count);
+    return resultado;
+}
+
+
 
 // Fecha con más pizzas vendidas
 char* dmsp(int *size, Venta *ventas) {
