@@ -34,6 +34,48 @@ char* dls(int* size, Venta* ventas) {
     return resultado;
 }
 
+// Fecha con más pizzas vendidas
+char* dmsp(int *size, Venta *ventas) {
+    // Asumimos un máximo de 365 días distintos
+    typedef struct {
+        char fecha[20];
+        int cantidad;
+    } DiaVentas;
+
+    DiaVentas dias[365];
+    int num_dias = 0;
+
+    for (int i = 0; i < *size; i++) {
+        int encontrado = 0;
+        for (int j = 0; j < num_dias; j++) {
+            if (strcmp(dias[j].fecha, ventas[i].order_date) == 0) {
+                dias[j].cantidad += ventas[i].quantity;
+                encontrado = 1;
+                break;
+            }
+        }
+        if (!encontrado) {
+            strcpy(dias[num_dias].fecha, ventas[i].order_date);
+            dias[num_dias].cantidad = ventas[i].quantity;
+            num_dias++;
+        }
+    }
+
+    // Buscar la fecha con más ventas
+    int max = 0;
+    int indice_max = 0;
+    for (int i = 0; i < num_dias; i++) {
+        if (dias[i].cantidad > max) {
+            max = dias[i].cantidad;
+            indice_max = i;
+        }
+    }
+
+    static char resultado[100];
+    sprintf(resultado, "Fecha con más pizzas: %s (%d pizzas)", dias[indice_max].fecha, dias[indice_max].cantidad);
+    return resultado;
+}
+
 
 
 
