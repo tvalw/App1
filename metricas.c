@@ -53,7 +53,23 @@ int leer_csv(const char *filename, Venta ventas[]) {
 
             col++;
         }
+if (*ptr == '"') {
+            ptr++;
+            field = ptr;
+            while (*ptr && *ptr != '"') ptr++;
+        } else {
+            field = ptr;
+            while (*ptr && *ptr != '\n') ptr++;
+        }
+        *ptr = '\0';
+        strncpy(v.pizza_name, field, 100);
 
+        ventas[count++] = v;
+    }
+
+    fclose(file);
+    return count;
+}
 
 // Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
