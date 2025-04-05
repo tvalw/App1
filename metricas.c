@@ -4,20 +4,38 @@
 #include "metricas.h"
 #include "structs.h"
 
-#define MAX_ORDERS 1000
-
-int leer_csv(const char *filename, Venta ventas[]) {
+int leer_csv(const char *filename, Venta **ventas) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         printf("Error: No se pudo abrir el archivo %s\n", filename);
         return 0;
     }
 
-    char line[1024];
+    char line[2048];
     int count = 0;
-    fgets(line, sizeof(line), file); // saltar encabezado
+    int capacidad = 100;
+    *ventas = malloc(capacidad * sizeof(Venta));
+    if (!*ventas) {
+        fclose(file);
+        printf("Error: No se pudo asignar memoria\n");
+        return 0;
+    }
 
-    while (fgets(line, sizeof(line), file) && count < MAX_ORDERS) {
+    fgets(line, sizeof(line), file); // Saltar encabezado
+
+    while (fgets(line, sizeof(line), file)) {
+        if (count >= capacidad) {
+            capacidad *= 2;
+            Venta *tmp = realloc(*ventas, capacidad * sizeof(Venta));
+            if (!tmp) {
+                printf("Error: No se pudo redimensionar el arreglo\n");
+                free(*ventas);
+                fclose(file);
+                return 0;
+            }
+            *ventas = tmp;
+        }
+
         Venta v;
         char *ptr = line;
         char *field;
@@ -25,14 +43,12 @@ int leer_csv(const char *filename, Venta ventas[]) {
 
         while (col < 11) {
             if (*ptr == '"') {
-                // Campo entre comillas
                 ptr++;
                 field = ptr;
                 while (*ptr && !(*ptr == '"' && *(ptr + 1) == ',')) ptr++;
                 *ptr = '\0';
-                ptr += 2; // Saltar '",'
+                ptr += 2;
             } else {
-                // Campo sin comillas
                 field = ptr;
                 while (*ptr && *ptr != ',') ptr++;
                 if (*ptr) *ptr++ = '\0';
@@ -51,11 +67,9 @@ int leer_csv(const char *filename, Venta ventas[]) {
                 case 9: strncpy(v.pizza_category, field, 50); break;
                 case 10: strncpy(v.pizza_ingredients, field, 200); break;
             }
-
             col++;
         }
 
-        // El último campo: pizza_name (fuera del while porque no termina en coma)
         if (*ptr == '"') {
             ptr++;
             field = ptr;
@@ -67,7 +81,7 @@ int leer_csv(const char *filename, Venta ventas[]) {
         *ptr = '\0';
         strncpy(v.pizza_name, field, 100);
 
-        ventas[count++] = v;
+        (*ventas)[count++] = v;
     }
 
     fclose(file);
@@ -75,16 +89,18 @@ int leer_csv(const char *filename, Venta ventas[]) {
 }
 
 
+// ------------------- MÉTRICAS -------------------
+
 char *pms(int *size, Venta *ventas) {
     int max_count = 0;
     char* best_seller = NULL;
-    int sales[MAX_ORDERS] = {0};
-    static char resultado[150];  
+    int sales[*size];
+    memset(sales, 0, sizeof(int) * (*size));
+    static char resultado[150];
 
     for (int i = 0; i < *size; i++) {
         int found = 0;
         for (int j = 0; j < i; j++) {
-            // Compara correctamente los nombres de pizza
             if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
                 sales[j] += ventas[i].quantity;
                 found = 1;
@@ -97,7 +113,7 @@ char *pms(int *size, Venta *ventas) {
     for (int i = 0; i < *size; i++) {
         if (sales[i] > max_count) {
             max_count = sales[i];
-            best_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+            best_seller = ventas[i].pizza_name;
         }
     }
 
@@ -109,19 +125,18 @@ char *pms(int *size, Venta *ventas) {
 char *pls(int *size, Venta *ventas) {
     int min_count = 999999;
     char* worst_seller = NULL;
-    static char resultado[150]; 
+    static char resultado[150];
 
     for (int i = 0; i < *size; i++) {
         int sum = 0;
         for (int j = 0; j < *size; j++) {
-            // Compara correctamente los nombres de pizza
             if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
                 sum += ventas[j].quantity;
             }
         }
         if (sum < min_count) {
             min_count = sum;
-            worst_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+            worst_seller = ventas[i].pizza_name;
         }
     }
 
@@ -136,7 +151,6 @@ char* dms(int* size, Venta* ventas) {
 
     for (int i = 0; i < *size; i++) {
         float total = 0;
-
         for (int j = 0; j < *size; j++) {
             if (strcmp(ventas[i].order_date, ventas[j].order_date) == 0) {
                 total += ventas[j].total_price;
@@ -146,33 +160,30 @@ char* dms(int* size, Venta* ventas) {
         if (total > max_revenue) {
             max_revenue = total;
             strncpy(mejor_fecha, ventas[i].order_date, 20);
-            mejor_fecha[19] = '\0'; // Asegurar null terminator
+            mejor_fecha[19] = '\0';
         }
     }
 
     char* resultado = malloc(100);
-    if (resultado == NULL) return NULL;
+    if (!resultado) return NULL;
 
     sprintf(resultado, "Fecha con más ventas (dinero): %s - $%.2f", mejor_fecha, max_revenue);
     return resultado;
 }
 
 
-// Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
     float min_revenue = -1;
     char peor_fecha[20] = "";
 
     for (int i = 0; i < *size; i++) {
         float total = 0;
-
         for (int j = 0; j < *size; j++) {
             if (strcmp(ventas[i].order_date, ventas[j].order_date) == 0) {
                 total += ventas[j].total_price;
             }
         }
 
-        // Verifica si es la primera vez o si encontramos un total menor
         if (min_revenue == -1 || total < min_revenue) {
             min_revenue = total;
             strncpy(peor_fecha, ventas[i].order_date, 20);
@@ -181,20 +192,15 @@ char* dls(int* size, Venta* ventas) {
     }
 
     char* resultado = malloc(100);
-    if (resultado == NULL) return NULL;
+    if (!resultado) return NULL;
 
     sprintf(resultado, "Fecha con menos ventas (dinero): %s - $%.2f", peor_fecha, min_revenue);
     return resultado;
 }
 
-// Fecha con más pizzas vendidas
-char* dmsp(int *size, Venta *ventas) {
-    // Asumimos un máximo de 365 días distintos
-    typedef struct {
-        char fecha[20];
-        int cantidad;
-    } DiaVentas;
 
+char* dmsp(int *size, Venta *ventas) {
+    typedef struct { char fecha[20]; int cantidad; } DiaVentas;
     DiaVentas dias[365];
     int num_dias = 0;
 
@@ -214,9 +220,7 @@ char* dmsp(int *size, Venta *ventas) {
         }
     }
 
-    // Buscar la fecha con más ventas
-    int max = 0;
-    int indice_max = 0;
+    int max = 0, indice_max = 0;
     for (int i = 0; i < num_dias; i++) {
         if (dias[i].cantidad > max) {
             max = dias[i].cantidad;
@@ -224,21 +228,14 @@ char* dmsp(int *size, Venta *ventas) {
         }
     }
 
-    // Crear string de salida
     static char resultado[100];
     sprintf(resultado, "Fecha con más pizzas: %s (%d pizzas)", dias[indice_max].fecha, dias[indice_max].cantidad);
     return resultado;
 }
 
 
-// Fecha con menos pizzas vendidas
 char* dlsp(int *size, Venta *ventas) {
-    // Estructura auxiliar para acumular ventas por fecha
-    typedef struct {
-        char fecha[20];
-        int cantidad;
-    } DiaVentas;
-
+    typedef struct { char fecha[20]; int cantidad; } DiaVentas;
     DiaVentas dias[365];
     int num_dias = 0;
 
@@ -258,9 +255,7 @@ char* dlsp(int *size, Venta *ventas) {
         }
     }
 
-    // Buscar la fecha con menos ventas
-    int min = dias[0].cantidad;
-    int indice_min = 0;
+    int min = dias[0].cantidad, indice_min = 0;
     for (int i = 1; i < num_dias; i++) {
         if (dias[i].cantidad < min) {
             min = dias[i].cantidad;
@@ -268,18 +263,14 @@ char* dlsp(int *size, Venta *ventas) {
         }
     }
 
-    // Crear string de salida
     static char resultado[100];
     sprintf(resultado, "Fecha con menos pizzas: %s (%d pizzas)", dias[indice_min].fecha, dias[indice_min].cantidad);
     return resultado;
 }
 
 
-// Promedio de pizzas por orden
 char* apo(int* size, Venta* ventas) {
-    int total_pizzas = 0;
-    int total_ordenes = 0;
-    int ultimo_order_id = -1;
+    int total_pizzas = 0, total_ordenes = 0, ultimo_order_id = -1;
 
     for (int i = 0; i < *size; i++) {
         total_pizzas += ventas[i].quantity;
@@ -290,21 +281,18 @@ char* apo(int* size, Venta* ventas) {
     }
 
     float promedio = (float)total_pizzas / total_ordenes;
-
     char* resultado = malloc(100);
     sprintf(resultado, "Promedio de pizzas por orden: %.2f", promedio);
     return resultado;
 }
 
-// Promedio de pizzas por día
+
 char* apd(int* size, Venta* ventas) {
-    int total_pizzas = 0;
-    int total_dias = 0;
+    int total_pizzas = 0, total_dias = 0;
     char fechas_unicas[*size][20];
 
     for (int i = 0; i < *size; i++) {
         total_pizzas += ventas[i].quantity;
-
         int encontrada = 0;
         for (int j = 0; j < total_dias; j++) {
             if (strcmp(fechas_unicas[j], ventas[i].order_date) == 0) {
@@ -312,7 +300,6 @@ char* apd(int* size, Venta* ventas) {
                 break;
             }
         }
-
         if (!encontrada) {
             strcpy(fechas_unicas[total_dias], ventas[i].order_date);
             total_dias++;
@@ -325,7 +312,7 @@ char* apd(int* size, Venta* ventas) {
     return resultado;
 }
 
-// Ingrediente más vendido
+
 typedef struct {
     char nombre[100];
     int cantidad;
@@ -341,7 +328,6 @@ char* ims(int* size, Venta* ventas) {
 
         while (token != NULL) {
             while (*token == ' ') token++;
-
             int encontrado = 0;
             for (int j = 0; j < total_ingredientes; j++) {
                 if (strcmp(ingredientes[j].nombre, token) == 0) {
@@ -359,7 +345,6 @@ char* ims(int* size, Venta* ventas) {
 
             token = strtok(NULL, ",");
         }
-
         free(ingredientes_str);
     }
 
@@ -379,8 +364,6 @@ char* ims(int* size, Venta* ventas) {
 }
 
 
-// Conteo de pizzas por categoría
-// Estructura auxiliar para contar categorías
 typedef struct {
     char categoria[50];
     int cantidad;
@@ -393,12 +376,11 @@ char* hp(int* size, Venta* orders) {
         return mensaje;
     }
 
-    CategoriaCount categorias[20]; // asumiendo pocas categorías distintas
+    CategoriaCount categorias[20];
     int total_categorias = 0;
 
     for (int i = 0; i < *size; i++) {
         int encontrada = 0;
-
         for (int j = 0; j < total_categorias; j++) {
             if (strcmp(categorias[j].categoria, orders[i].pizza_category) == 0) {
                 categorias[j].cantidad += orders[i].quantity;
@@ -414,9 +396,8 @@ char* hp(int* size, Venta* orders) {
         }
     }
 
-    // Crear resultado
     char* resultado = malloc(300);
-    resultado[0] = '\0'; // Inicializar string
+    resultado[0] = '\0';
 
     for (int i = 0; i < total_categorias; i++) {
         char linea[100];
@@ -427,6 +408,9 @@ char* hp(int* size, Venta* orders) {
     return resultado;
 }
 
+
+// ------------------ GENERADOR -------------------
+
 void generar_metricas(int *size, Venta *ventas, const char **metricas, int cantidad_metricas) {
     for (int i = 0; i < cantidad_metricas; i++) {
         if (strcmp(metricas[i], "pms") == 0) {
@@ -434,35 +418,24 @@ void generar_metricas(int *size, Venta *ventas, const char **metricas, int canti
         } else if (strcmp(metricas[i], "pls") == 0) {
             printf("%s\n", pls(size, ventas));
         } else if (strcmp(metricas[i], "dms") == 0) {
-            char *r = dms(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = dms(size, ventas); printf("%s\n", r); free(r);
         } else if (strcmp(metricas[i], "dls") == 0) {
-            char *r = dls(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = dls(size, ventas); printf("%s\n", r); free(r);
         } else if (strcmp(metricas[i], "dmsp") == 0) {
             printf("%s\n", dmsp(size, ventas));
         } else if (strcmp(metricas[i], "dlsp") == 0) {
             printf("%s\n", dlsp(size, ventas));
         } else if (strcmp(metricas[i], "apo") == 0) {
-            char *r = apo(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = apo(size, ventas); printf("%s\n", r); free(r);
         } else if (strcmp(metricas[i], "apd") == 0) {
-            char *r = apd(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = apd(size, ventas); printf("%s\n", r); free(r);
         } else if (strcmp(metricas[i], "ims") == 0) {
-            char *r = ims(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = ims(size, ventas); printf("%s\n", r); free(r);
         } else if (strcmp(metricas[i], "hp") == 0) {
-            char *r = hp(size, ventas);
-            printf("%s\n", r);
-            free(r);
+            char *r = hp(size, ventas); printf("%s\n", r); free(r);
         } else {
             printf("Métrica desconocida: %s\n", metricas[i]);
         }
     }
 }
+
