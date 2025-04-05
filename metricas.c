@@ -4,6 +4,104 @@
 #include "metricas.h"
 #include "structs.h"
 
+#define MAX_ORDERS 1000
+// Leer el csv
+int leer_csv(const char *filename, Venta ventas[]) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: No se pudo abrir el archivo %s\n", filename);
+        return 0;
+    }
+  char line[1024];
+    int count = 0;
+    fgets(line, sizeof(line), file); // saltar encabezado
+
+    while (fgets(line, sizeof(line), file) && count < MAX_ORDERS) {
+        Venta v;
+        char *ptr = line;
+        char *field;
+        int col = 0;
+
+        while (col < 11) {
+            if (*ptr == '"') {
+                // Campo entre comillas
+                ptr++;
+                field = ptr;
+                while (*ptr && !(*ptr == '"' && *(ptr + 1) == ',')) ptr++;
+                *ptr = '\0';
+                ptr += 2; // Saltar '",'
+            } else {
+                // Campo sin comillas
+                field = ptr;
+                while (*ptr && *ptr != ',') ptr++;
+                if (*ptr) *ptr++ = '\0';
+            }
+
+            switch (col) {
+                case 0: v.pizza_id = atoi(field); break;
+                case 1: v.order_id = atoi(field); break;
+                case 2: strncpy(v.pizza_name_id, field, 100); break;
+                case 3: v.quantity = atoi(field); break;
+                case 4: strncpy(v.order_date, field, 20); break;
+                case 5: strncpy(v.order_time, field, 20); break;
+                case 6: v.unit_price = atof(field); break;
+                case 7: v.total_price = atof(field); break;
+                case 8: strncpy(v.pizza_size, field, 5); break;
+                case 9: strncpy(v.pizza_category, field, 50); break;
+                case 10: strncpy(v.pizza_ingredients, field, 200); break;
+            }
+
+            col++;
+        }
+if (*ptr == '"') {
+            ptr++;
+            field = ptr;
+            while (*ptr && *ptr != '"') ptr++;
+        } else {
+            field = ptr;
+            while (*ptr && *ptr != '\n') ptr++;
+        }
+        *ptr = '\0';
+        strncpy(v.pizza_name, field, 100);
+
+        ventas[count++] = v;
+    }
+
+    fclose(file);
+    return count;
+}
+
+//Pizza más vendida 
+char *pms(int *size, Venta *ventas) {
+    int max_count = 0;
+    char* best_seller = NULL;
+    int sales[MAX_ORDERS] = {0};
+    static char resultado[150];  
+
+    for (int i = 0; i < *size; i++) {
+        int found = 0;
+        for (int j = 0; j < i; j++) {
+            // Compara correctamente los nombres de pizza
+            if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
+                sales[j] += ventas[i].quantity;
+                found = 1;
+                break;
+            }
+        }
+        if (!found) sales[i] = ventas[i].quantity;
+    }
+
+    for (int i = 0; i < *size; i++) {
+        if (sales[i] > max_count) {
+            max_count = sales[i];
+            best_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+        }
+    }
+
+    snprintf(resultado, sizeof(resultado), "Pizza más vendida: %s (%d unidades)", best_seller, max_count);
+    return resultado;
+}
+
 
 // Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
@@ -33,6 +131,32 @@ char* dls(int* size, Venta* ventas) {
     sprintf(resultado, "Fecha con menos ventas (dinero): %s - $%.2f", peor_fecha, min_revenue);
     return resultado;
 }
+
+//Pizza menos vendida
+char *pls(int *size, Venta *ventas) {
+    int min_count = 999999;
+    char* worst_seller = NULL;
+    static char resultado[150]; 
+
+    for (int i = 0; i < *size; i++) {
+        int sum = 0;
+        for (int j = 0; j < *size; j++) {
+            // Compara correctamente los nombres de pizza
+            if (strcmp(ventas[i].pizza_name, ventas[j].pizza_name) == 0) {
+                sum += ventas[j].quantity;
+            }
+        }
+        if (sum < min_count) {
+            min_count = sum;
+            worst_seller = ventas[i].pizza_name;  // Asignamos el nombre de la pizza
+        }
+    }
+
+    snprintf(resultado, sizeof(resultado), "Pizza menos vendida: %s (%d unidades)", worst_seller, min_count);
+    return resultado;
+}
+
+
 
 // Fecha con más pizzas vendidas
 char* dmsp(int *size, Venta *ventas) {

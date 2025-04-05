@@ -7,6 +7,14 @@
 // Función que lee el archivo CSV y llena el arreglo de ventas
 int leer_csv(const char *filename, Venta ventas[]);
 
+// Función que devuelve la pizza más vendida
+char *pms(int *size, Venta *ventas);
+
+// Función que devuelve la pizza menos vendida
+char *pls(int *size, Venta *ventas);
+
+// Función que devuelve la fecha con más ventas en dinero
+char* dms(int* size, Venta* ventas);
 
 // Función que devuelve la fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas);
