@@ -1,18 +1,22 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "metricas.h"
 #include "structs.h"
 
+// Definir tipo de función para métricas
 typedef char* (*MetricaFunction)(int*, Venta*);
 
+// Estructura que asocia nombre de métrica con su función
 typedef struct {
     const char* nombre;
     MetricaFunction funcion;
 } Metrica;
 
+// Menú de ayuda
 void mostrarMenu() {
     printf("\nUso del programa:\n");
-    printf("./app1 <archivo.csv> <métrica>\n");
+    printf("./app1 <archivo.csv> <métrica1> <métrica2> ...\n");
     printf("\nMétricas disponibles:\n");
     printf("  pms   : Pizza más vendida\n");
     printf("  pls   : Pizza menos vendida\n");
@@ -25,7 +29,7 @@ void mostrarMenu() {
     printf("  ims   : Ingrediente más vendido\n");
     printf("  hp    : Cantidad de pizzas por categoría\n");
     printf("\nEjemplo de uso:\n");
-    printf("  ./app1 ventas.csv pms\n\n");
+    printf("  ./app1 ventas.csv pms apd hp\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -41,6 +45,7 @@ int main(int argc, char *argv[]) {
         printf("Error: no se pudieron cargar los datos.\n");
         return 1;
     }
+
     // Lista de métricas disponibles
     Metrica metricas[] = {
         {"pms", pms},
@@ -57,13 +62,13 @@ int main(int argc, char *argv[]) {
 
     int num_metricas = sizeof(metricas) / sizeof(metricas[0]);
 
+    // Ejecutar todas las métricas solicitadas
     for (int i = 2; i < argc; i++) {
         int encontrada = 0;
         for (int j = 0; j < num_metricas; j++) {
             if (strcmp(argv[i], metricas[j].nombre) == 0) {
                 char* resultado = metricas[j].funcion(&size, ventas);
                 printf("Resultado de %s:\n%s\n\n", argv[i], resultado);
-                free(resultado);  // solo si usás malloc dentro de la métrica
                 encontrada = 1;
                 break;
             }
