@@ -3,6 +3,13 @@
 #include "metricas.h"
 #include "structs.h"
 
+typedef char* (*MetricaFunction)(int*, Venta*);
+
+typedef struct {
+    const char* nombre;
+    MetricaFunction funcion;
+} Metrica;
+
 void mostrarMenu() {
     printf("\nUso del programa:\n");
     printf("./app1 <archivo.csv> <métrica>\n");
