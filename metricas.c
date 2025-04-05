@@ -12,6 +12,48 @@ int leer_csv(const char *filename, Venta ventas[]) {
         printf("Error: No se pudo abrir el archivo %s\n", filename);
         return 0;
     }
+  char line[1024];
+    int count = 0;
+    fgets(line, sizeof(line), file); // saltar encabezado
+
+    while (fgets(line, sizeof(line), file) && count < MAX_ORDERS) {
+        Venta v;
+        char *ptr = line;
+        char *field;
+        int col = 0;
+
+        while (col < 11) {
+            if (*ptr == '"') {
+                // Campo entre comillas
+                ptr++;
+                field = ptr;
+                while (*ptr && !(*ptr == '"' && *(ptr + 1) == ',')) ptr++;
+                *ptr = '\0';
+                ptr += 2; // Saltar '",'
+            } else {
+                // Campo sin comillas
+                field = ptr;
+                while (*ptr && *ptr != ',') ptr++;
+                if (*ptr) *ptr++ = '\0';
+            }
+
+            switch (col) {
+                case 0: v.pizza_id = atoi(field); break;
+                case 1: v.order_id = atoi(field); break;
+                case 2: strncpy(v.pizza_name_id, field, 100); break;
+                case 3: v.quantity = atoi(field); break;
+                case 4: strncpy(v.order_date, field, 20); break;
+                case 5: strncpy(v.order_time, field, 20); break;
+                case 6: v.unit_price = atof(field); break;
+                case 7: v.total_price = atof(field); break;
+                case 8: strncpy(v.pizza_size, field, 5); break;
+                case 9: strncpy(v.pizza_category, field, 50); break;
+                case 10: strncpy(v.pizza_ingredients, field, 200); break;
+            }
+
+            col++;
+        }
+
 
 // Fecha con menos ventas en dinero
 char* dls(int* size, Venta* ventas) {
