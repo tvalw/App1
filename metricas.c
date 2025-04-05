@@ -4,6 +4,47 @@
 #include "metricas.h"
 #include "structs.h"
 
+
+// Fecha con menos ventas en dinero
+char* dls(int* size, Venta* ventas) {
+    float min_revenue = -1;
+    char peor_fecha[20] = "";
+
+    for (int i = 0; i < *size; i++) {
+        float total = 0;
+
+        for (int j = 0; j < *size; j++) {
+            if (strcmp(ventas[i].order_date, ventas[j].order_date) == 0) {
+                total += ventas[j].total_price;
+            }
+        }
+
+        // Verifica si es la primera vez o si encontramos un total menor
+        if (min_revenue == -1 || total < min_revenue) {
+            min_revenue = total;
+            strncpy(peor_fecha, ventas[i].order_date, 20);
+            peor_fecha[19] = '\0';
+        }
+    }
+
+    char* resultado = malloc(100);
+    if (resultado == NULL) return NULL;
+
+    sprintf(resultado, "Fecha con menos ventas (dinero): %s - $%.2f", peor_fecha, min_revenue);
+    return resultado;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 // Promedio de pizzas por orden
 char* apo(int* size, Venta* ventas) {
     int total_pizzas = 0;
