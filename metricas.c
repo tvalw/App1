@@ -76,15 +76,47 @@ char* dmsp(int *size, Venta *ventas) {
     return resultado;
 }
 
+// Fecha con menos pizzas vendidas
+char* dlsp(int *size, Venta *ventas) {
+    // Estructura auxiliar para acumular ventas por fecha
+    typedef struct {
+        char fecha[20];
+        int cantidad;
+    } DiaVentas;
 
+    DiaVentas dias[365];
+    int num_dias = 0;
 
+    for (int i = 0; i < *size; i++) {
+        int encontrado = 0;
+        for (int j = 0; j < num_dias; j++) {
+            if (strcmp(dias[j].fecha, ventas[i].order_date) == 0) {
+                dias[j].cantidad += ventas[i].quantity;
+                encontrado = 1;
+                break;
+            }
+        }
+        if (!encontrado) {
+            strcpy(dias[num_dias].fecha, ventas[i].order_date);
+            dias[num_dias].cantidad = ventas[i].quantity;
+            num_dias++;
+        }
+    }
 
+    // Buscar la fecha con menos ventas
+    int min = dias[0].cantidad;
+    int indice_min = 0;
+    for (int i = 1; i < num_dias; i++) {
+        if (dias[i].cantidad < min) {
+            min = dias[i].cantidad;
+            indice_min = i;
+        }
+    }
 
-
-
-
-
-
+    static char resultado[100];
+    sprintf(resultado, "Fecha con menos pizzas: %s (%d pizzas)", dias[indice_min].fecha, dias[indice_min].cantidad);
+    return resultado;
+}
 
 
 // Promedio de pizzas por orden
