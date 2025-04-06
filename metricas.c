@@ -4,8 +4,7 @@
 #include "metricas.h"  // Librería que define funciones para métricas
 #include "structs.h"   // Librería que contiene la definición de la estructura Venta
 
- // Máximo número de órdenes a leer
-#define MAX_ORDERS 1000 
+#define MAX_ORDERS 1000  // Máximo número de órdenes a leer
 
 // Función para leer un archivo CSV y cargar los datos de ventas
 int leer_csv(const char *filename, Venta ventas[]) {
