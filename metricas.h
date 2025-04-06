@@ -5,7 +5,7 @@
 
 
 // Función que lee el archivo CSV y llena el arreglo de ventas
-int leer_csv(const char *filename, Venta ventas[]);
+int leer_csv(const char *filename, Venta **ventas);
 
 // Función que devuelve la pizza más vendida
 char *pms(int *size, Venta *ventas);
